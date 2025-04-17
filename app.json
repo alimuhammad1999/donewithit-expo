@@ -8,17 +8,26 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash" : 
-        {
-          "image": "./assets/images/splash.png",
-          "resizeMode": "cover",
-          "backgroundColor": "#e63c4b",
-          "fullscreen": true
-        },
+    "extra": {
+      "eas": {
+        "projectId": "fa7ef219-7ffa-4f95-b5bf-2234a4fec96e"
+      },
+      "router": {
+        "origin": false
+      }
+    },
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#e63c4b",
+      "fullscreen": true
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.expo.doneWithIt",
+      "useNextNotificationsApi": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -30,6 +39,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-notifications",
       "expo-router",
       [
         "expo-splash-screen",
@@ -43,6 +53,7 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "owner": "alimuhammad1999"
   }
 }

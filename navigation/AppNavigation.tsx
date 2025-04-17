@@ -8,10 +8,19 @@ import AccountScreen from "../Screens/AccountScreen";
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import FeedNavigator from "./FeedNavigator";
-import Notifications from "expo-notifications";
 import AccountNavigator from "./AccountNavigation";
-import { Platform, StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
+import { Button, Platform, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";// Add at the top with other imports
+import * as Notifications from 'expo-notifications';
+
+// Configure notifications (add this before your component)
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+    }),
+});
 
 interface AppNavigationProps { }
 
@@ -22,18 +31,31 @@ const TabNavigator = () => {
 
     useEffect(() => {
         registerForPushNotifications();
-        registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
-
     }, [])
 
     const registerForPushNotifications = async () => {
+        let token;
         console.log("Registering for push notifications");
         const permission = await Notifications.requestPermissionsAsync()
         console.log(permission);
         // const permission = await Permissions.askAsync(Permissions.NOTIFICATIONS);
         if (!permission.granted) return;
-        const token = await Notifications.getExpoPushTokenAsync();
+        console.log("Permission granted");
+        const projectId =
+            Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+        console.log("projectId", projectId);
+        if (!projectId) {
+            // throw new Error('Project ID not found');
+            console.log('Project ID not found');
+        }
+        token = (
+            await Notifications.getExpoPushTokenAsync({
+                projectId,
+            })
+        ).data;
         console.log(token);
+        // const token = await Notifications.getExpoPushTokenAsync();
+        // console.log(token);
     }
 
 
@@ -50,10 +72,14 @@ const TabNavigator = () => {
             <Tab.Screen name="Feed" component={FeedNavigator} options={{
                 tabBarIcon: ({ size, color }) => <MaterialCommunityIcons name="home" size={size * 1.4} color={color} />
             }} />
-            <Tab.Screen name="Details" component={ListingEditScreen} options={{
+            <Tab.Screen name="ListingEdit" component={ListingEditScreen} options={{
                 tabBarLabel: '',
                 tabBarIcon: ({ size }) => <AppIcon name="plus-circle" size={size * 2.5}
-                    style={{ marginBottom: size * 1.1, borderWidth: 10, borderColor: 'white' }} />,
+                    style={{
+                        marginBottom: size * 1.1, borderWidth: 10, borderColor: 'white',
+                        backgroundColor: colors.white, // Add background
+                        borderRadius: size * 1.25
+                    }} />,
                 // headerLeftLabelVisible: false
             }} />
             <Tab.Screen name="AccountDetails" component={AccountNavigator} options={{
@@ -61,54 +87,6 @@ const TabNavigator = () => {
             }} />
         </Tab.Navigator>
     )
-}
-
-async function registerForPushNotificationsAsync() {
-    let token;
-
-    if (Platform.OS === 'android') {
-        const channel = await Notifications.setNotificationChannelAsync('myNotificationChannel', {
-            name: 'A channel is needed for the permissions prompt to appear',
-            importance: Notifications.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#FF231F7C',
-        });
-        console.log('Channel created:', channel);
-    }
-
-    if (Device.isDevice) {
-        console.log('Device is a physical device!!!');
-
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-        if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
-            finalStatus = status;
-        }
-        if (finalStatus !== 'granted') {
-            alert('Failed to get push token for push notification!');
-            return;
-        }
-        try {
-            const projectId =
-                Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
-            if (!projectId) {
-                throw new Error('Project ID not found');
-            }
-            token = (
-                await Notifications.getExpoPushTokenAsync({
-                    projectId,
-                })
-            ).data;
-            console.log(token);
-        } catch (e) {
-            token = `${e}`;
-        }
-    } else {
-        alert('Must use physical device for Push Notifications');
-    }
-
-    return token;
 }
 
 const AppNavigation = () => {
